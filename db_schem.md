@@ -1,21 +1,25 @@
+# Database Schema ER Diagram
+
+```mermaid
 erDiagram
+    USERS ||--o{ PORTFOLIOS : owns
+    PORTFOLIOS ||--o{ BROKER_ACCOUNTS : owns
+    BROKER_TYPES ||--o{ BROKER_ACCOUNTS : categorizes
+    BROKER_ACCOUNTS ||--|| BROKER_ACCOUNT_CREDENTIALS : has
+    BROKER_ACCOUNTS ||--o{ HOLDINGS : contains
+    BROKER_ACCOUNTS ||--o{ TRANSACTIONS : records
 
-    users ||--o{ portfolios : has
-    portfolios ||--o{ broker_accounts : has
-    broker_types ||--o{ broker_accounts : defines
-    broker_accounts ||--|| broker_account_credentials : has
-    broker_accounts ||--o{ holdings : has
-    broker_accounts ||--o{ transactions : has
-
-    users {
+    %% Table: users
+    USERS {
         bigserial id PK
         text email
         text name
         timestamptz created_at
     }
 
-    portfolios {
-        bigserial id PK 
+    %% Table: portfolios
+    PORTFOLIOS {
+        bigserial id PK
         bigint user_id FK
         bool active
         text name
@@ -24,13 +28,15 @@ erDiagram
         timestamptz created_at
     }
 
-    broker_types {
+    %% Table: broker_types
+    BROKER_TYPES {
         bigserial id PK
         text code
         text display_name
     }
 
-    broker_accounts {
+    %% Table: broker_accounts
+    BROKER_ACCOUNTS {
         bigserial id PK
         bigint portfolio_id FK
         bigint broker_type_id FK
@@ -40,7 +46,8 @@ erDiagram
         timestamptz created_at
     }
 
-    broker_account_credentials {
+    %% Table: broker_account_credentials
+    BROKER_ACCOUNT_CREDENTIALS {
         bigserial id PK
         bigint broker_account_id FK
         jsonb credentials
@@ -49,7 +56,8 @@ erDiagram
         timestamptz updated_at
     }
 
-    holdings {
+    %% Table: holdings
+    HOLDINGS {
         bigserial id PK
         bigint broker_account_id FK
         text asset_type
@@ -66,7 +74,8 @@ erDiagram
         timestamptz created_at
     }
 
-    transactions {
+    %% Table: transactions
+    TRANSACTIONS {
         bigserial id PK
         bigint broker_account_id FK
         text asset_type
