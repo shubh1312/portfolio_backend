@@ -1,0 +1,31 @@
+# portfolio/services.py
+
+from portfolio.models import Holding
+from django.utils import timezone
+from django.db import transaction
+
+def persist_holdings(broker_account, holdings_list):
+    """
+    Actual DB update logic for holdings.
+    Called by broker worker OR management command OR API.
+    """
+    saved = 0
+    with transaction.atomic():
+        for item in holdings_list:
+            obj, created = Holding.objects.update_or_create(
+                broker_account=broker_account,
+                symbol=item['symbol'],
+                as_of=item.get('as_of', timezone.now()),
+                defaults={
+                    'asset_type': item.get('asset_type','stock'),
+                    'isin': item.get('isin'),
+                    'quantity': item.get('quantity',0),
+                    'avg_price': item.get('avg_price',0),
+                    'currency': item.get('currency','INR'),
+                    'cost_value': item.get('cost_value'),
+                    'market_value': item.get('market_value'),
+                    'meta': item.get('meta'),
+                }
+            )
+            saved += 1
+    return saved
