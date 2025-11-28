@@ -11,3 +11,5 @@ instance/
 *.sqlite
 .vscode/
 .idea/
+logs/
+pids/

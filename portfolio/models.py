@@ -7,6 +7,7 @@ from django.utils import timezone
 class User(models.Model):
     email = models.TextField(unique=True)
     name = models.TextField(null=True, blank=True)
+    active = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

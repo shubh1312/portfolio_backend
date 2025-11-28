@@ -80,13 +80,3 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # If you want to use django-celery-results to persist task results:
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
-
-
-# Example periodic task: run holdings sync every 5 minutes
-from celery.schedules import crontab
-CELERY_BEAT_SCHEDULE = {
-    'sync-holdings-every-5-minutes': {
-        'task': 'portfolio.tasks.sync_holdings_task',
-        'schedule': crontab(minute='*/5'),
-    },
-}
