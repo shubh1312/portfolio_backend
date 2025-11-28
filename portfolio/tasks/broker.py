@@ -3,6 +3,7 @@ from celery import shared_task
 from django.apps import apps
 from portfolio.triggers import registry
 from portfolio.services import persist_holdings   # <-- important
+from portfolio.debug_helpers import wait_for_debugger
 
 ACTION_HANDLERS = {
     'holdings': 'fetch_holdings',
@@ -11,6 +12,8 @@ ACTION_HANDLERS = {
 @shared_task(bind=True, max_retries=5, default_retry_delay=60)
 def broker_action_task(self, portfolio_id, broker_account_id, action):
     BrokerAccount = apps.get_model('portfolio', 'BrokerAccount')
+    wait_for_debugger()
+
     try:
         acc = BrokerAccount.objects.select_related('broker_type', 'credential').get(id=broker_account_id)
     except BrokerAccount.DoesNotExist as exc:
