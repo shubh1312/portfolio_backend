@@ -32,13 +32,13 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  A[active_users_data_sync_worker Scheduled] --> B[get active users]
-  B --> C[for each user - get active portfolios]
-  C --> D[portfolio_sync_task with portfolio_id]
-  D --> E[group of broker_action_task]
-  E --> F[broker_action_task for broker_account_id]
-  F --> G[Trigger.fetch_holdings()]
-  G --> H[services.persist_holdings()]
+  A[active_users_data_sync_worker (scheduled)] --> B[get active users]
+  B --> C[get active portfolios for user]
+  C --> D[enqueue portfolio_sync_task (portfolio_id)]
+  D --> E[fanned group of broker_action_task]
+  E --> F[run broker_action_task (broker_account_id)]
+  F --> G[Trigger: fetch holdings]
+  G --> H[Services: persist holdings]
   H --> I[(Postgres DB)]
 ```
 
