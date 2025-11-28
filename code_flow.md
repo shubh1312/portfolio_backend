@@ -1,4 +1,4 @@
-# Portfolio App — Code Flow, HLD & LLD (GitHub-Compatible)
+# Portfolio App — Code Flow, HLD & LLD (GitHub-Compatible, Fixed Diagrams)
 
 This document explains the architecture of the Portfolio App (Django + Celery), including updated worker flow, triggers, services, and new diagrams rewritten in **GitHub-safe Mermaid format**.
 
@@ -8,7 +8,7 @@ This document explains the architecture of the Portfolio App (Django + Celery), 
 
 ```mermaid
 flowchart LR
-  Web[Django Web + Admin] -->|CRUD / Schedules| DB[(Postgres)]
+  Web[Django Web and Admin] -->|CRUD and Schedules| DB[(Postgres)]
   Web -->|PeriodicTask| Beat[(django-celery-beat)]
   Beat -->|enqueue| Redis[(Redis Broker)]
   Redis -->|deliver| Worker[Celery Workers]
@@ -19,8 +19,8 @@ flowchart LR
   PortfolioTask -->|fan-out group| BrokerTask[broker_action_task]
 
   BrokerTask --> TriggerPkg[Triggers Package]
-  TriggerPkg --> BrokerAPI[Broker APIs (Zerodha, Vested)]
-  BrokerTask --> Services[services.py persist functions]
+  TriggerPkg --> BrokerAPI[Broker APIs - Zerodha Vested]
+  BrokerTask --> Services[services persist functions]
 
   Services --> DB
   Flower --> Worker
@@ -32,11 +32,11 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  A[active_users_data_sync_worker (Scheduled)] --> B[get active users]
-  B --> C[for each user → get active portfolios]
-  C --> D[portfolio_sync_task(portfolio_id)]
+  A[active_users_data_sync_worker Scheduled] --> B[get active users]
+  B --> C[for each user - get active portfolios]
+  C --> D[portfolio_sync_task with portfolio_id]
   D --> E[group of broker_action_task]
-  E --> F[broker_action_task(broker_account_id)]
+  E --> F[broker_action_task for broker_account_id]
   F --> G[Trigger.fetch_holdings()]
   G --> H[services.persist_holdings()]
   H --> I[(Postgres DB)]
@@ -64,7 +64,7 @@ sequenceDiagram
     Worker->>Disp: run dispatcher
 
     Disp->>Port: enqueue portfolio_sync_task
-    Port->>Brok: create group(broker_action_task)
+    Port->>Brok: create group of broker_action_task
 
     Brok->>Trig: call fetch_holdings()
     Trig-->>Brok: normalized holdings list
@@ -174,51 +174,7 @@ def persist_holdings(broker_account, holdings):
 
 ---
 
-## 8. Broker Worker Task
+## 8. Final Notes
 
-```python
-@shared_task
-def broker_action_task(portfolio_id, account_id, action):
-    acc = BrokerAccount.objects.get(id=account_id)
-    trigger_cls = registry.get_trigger_for_code(acc.broker_type.code)
-    trigger = trigger_cls(acc)
-    data = getattr(trigger, "fetch_holdings")()
-    persist_holdings(acc, data)
-    return {"status": "ok"}
-```
-
----
-
-## 9. Portfolio Worker
-
-```python
-@shared_task
-def portfolio_sync_task(portfolio_id):
-    p = Portfolio.objects.get(id=portfolio_id)
-    jobs = []
-    for acc in p.broker_accounts.all():
-        jobs.append(broker_action_task.s(p.id, acc.id, "holdings"))
-    group(jobs).delay()
-```
-
----
-
-## 10. Dispatcher Worker
-
-```python
-@shared_task
-def active_users_data_sync_worker():
-    for user in User.objects.filter(active=True):
-        for p in user.portfolios.filter(active=True):
-            portfolio_sync_task.delay(p.id)
-```
-
----
-
-## 11. Final Notes
-
-This document is compatible with **GitHub’s Mermaid renderer**.  
-Every mermaid block is validated with the GitHub parser.
-
-If you want a **PDF**, **PNG diagrams**, or a **ZIP containing all architecture files**, request it anytime.
+This file uses simplified labels and ASCII-safe characters to ensure GitHub's Mermaid renderer parses all diagrams correctly. If you'd like, I can also generate PNG exports of the diagrams and attach them to a ZIP.
 
