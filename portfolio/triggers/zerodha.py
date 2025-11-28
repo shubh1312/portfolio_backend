@@ -4,7 +4,7 @@ from .base import BaseTrigger
 import requests
 import datetime
 
-@register("ZERODHA")
+@register("zerodha")
 class ZerodhaTrigger(BaseTrigger):
 
     def __init__(self, broker_account):
@@ -19,36 +19,36 @@ class ZerodhaTrigger(BaseTrigger):
         Must return list[ dict(...) ] in a standard format.
         """
 
-        headers = {
-            "Authorization": f"Bearer {self.creds.get('access_token')}",
-            "X-Client-Id": self.creds.get('client_id'),
-            "Content-Type": "application/json",
-        }
+        # headers = {
+        #     "Authorization": f"Bearer {self.creds.get('access_token')}",
+        #     "X-Client-Id": self.creds.get('client_id'),
+        #     "Content-Type": "application/json",
+        # }
 
-        url = "https://api.kite.trade/portfolio/holdings"
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        # url = "https://api.kite.trade/portfolio/holdings"
+        # response = requests.get(url, headers=headers, timeout=10)
+        # response.raise_for_status()
 
-        raw_data = response.json()["data"]    # Example API structure
+        # raw_data = response.json()["data"]    # Example API structure
 
-        # Convert API response to your internal format:
-        output = []
-        now = datetime.datetime.now(datetime.timezone.utc)
+        # # Convert API response to your internal format:
+        # output = []
+        # now = datetime.datetime.now(datetime.timezone.utc)
 
-        for item in raw_data:
-            output.append({
-                "symbol": item["tradingsymbol"],
-                "quantity": float(item["quantity"]),
-                "avg_price": float(item["average_price"]),
-                "asset_type": "stock",
-                "isin": item.get("isin"),
-                "market_value": float(item.get("last_price", 0)) * float(item["quantity"]),
-                "as_of": now,
-                "source_snapshot_id": item.get("instrument_token"),
-                "meta": item,  # FULL raw API object saved for debugging
-            })
+        # for item in raw_data:
+        #     output.append({
+        #         "symbol": item["tradingsymbol"],
+        #         "quantity": float(item["quantity"]),
+        #         "avg_price": float(item["average_price"]),
+        #         "asset_type": "stock",
+        #         "isin": item.get("isin"),
+        #         "market_value": float(item.get("last_price", 0)) * float(item["quantity"]),
+        #         "as_of": now,
+        #         "source_snapshot_id": item.get("instrument_token"),
+        #         "meta": item,  # FULL raw API object saved for debugging
+        #     })
 
-        return output
+        return {"status": "not_implemented"}
 
     def fetch_transactions(self):
         """
