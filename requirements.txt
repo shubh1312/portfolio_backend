@@ -1,9 +1,32 @@
-celery==5.5.3
-flower==2.0.1
-redis==7.0.1
+# Web framework
+Django==4.2.10
+
+# Celery & beat/result backends
 celery==5.5.3
 django-celery-beat==2.8.1
-django_celery_results==2.6.0
-flower==2.0.1
+django-celery-results==2.6.0
+
+# Broker & result backend client
 redis==7.0.1
-debugpy>=1.0.0
+
+# Monitoring UI
+flower==2.0.1
+
+# HTTP calls used by triggers
+requests==2.31.0
+
+# Debugger for IDE attach
+debugpy==1.8.17
+
+# Faker for dummy data endpoint
+Faker==18.11.2
+
+# Optional environment loader
+python-dotenv==1.0.1
+
+# DB drivers (choose one)
+psycopg2-binary==2.9.9
+# mysqlclient==2.2.0
+
+# Optional production WSGI server
+gunicorn==21.2.0
