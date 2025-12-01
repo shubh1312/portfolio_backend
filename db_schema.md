@@ -1,3 +1,6 @@
+# Database Schema ER Diagram
+mermaid
+
 erDiagram
     USERS ||--o{ PORTFOLIOS : owns
     PORTFOLIOS ||--o{ BROKER_ACCOUNTS : owns
