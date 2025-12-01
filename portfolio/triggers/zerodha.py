@@ -149,23 +149,37 @@ class ZerodhaTrigger(BaseTrigger):
 
         try:
             holdings_raw = kite.holdings()
-            positions_raw = kite.positions()
-            try:
-                margins_equity = kite.margins("equity")
-            except Exception:
-                margins_equity = None
+            # positions_raw = kite.positions()
+            # try:
+            #     margins_equity = kite.margins("equity")
+            # except Exception:
+            #     margins_equity = None
 
             output = []
             now = datetime.now(timezone.utc)
 
             for item in holdings_raw:
+                quantity = float(item.get("quantity", 0) or 0)
+                avg_price = float(item.get("average_price", 0) or 0)
+                last_price = float(item.get("last_price", 0) or 0)
+                close_price = item.get("close_price")
+
                 output.append({
+                    # --- Stock fields ---
                     "symbol": item.get("tradingsymbol"),
-                    "quantity": float(item.get("quantity", 0)),
-                    "avg_price": float(item.get("average_price", 0)),
-                    "asset_type": item.get("product") or "stock",
                     "isin": item.get("isin"),
-                    "market_value": float(item.get("last_price", 0)) * float(item.get("quantity", 0)),
+                    # you can refine this mapping later if needed
+                    "asset_type": item.get("product") or "equity",
+                    "last_price": last_price,
+                    "close_price": close_price,
+
+                    # price timestamp (you could use Zerodha timestamp if available)
+                    "price_as_of": now,
+
+                    # --- Holding fields ---
+                    "quantity": quantity,
+                    "avg_price": avg_price,
+                    "currency": "INR",
                     "as_of": now,
                     "source_snapshot_id": item.get("instrument_token"),
                     "meta": item,
@@ -176,10 +190,8 @@ class ZerodhaTrigger(BaseTrigger):
                 "data": output,
                 "raw": {
                     "holdings": holdings_raw,
-                    "positions": positions_raw,
-                    "margins_equity": margins_equity
                 },
-                "token_source": token_info.get("source")
+                "token_source": token_info.get("source"),
             }
 
         except Exception as e:

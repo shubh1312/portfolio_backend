@@ -94,8 +94,8 @@ class Stock(models.Model):
         # You can tune this uniqueness rule as you like
         constraints = [
             models.UniqueConstraint(
-                fields=['symbol', 'isin', 'asset_type', 'as_of'],
-                name='uniq_stock_price_snapshot',
+                fields=['symbol', 'isin', 'asset_type'],
+                name='uniq_stock_instrument',
             )
         ]
 

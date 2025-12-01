@@ -5,43 +5,104 @@ from django.utils import timezone
 from django.db import transaction
 
 
+# portfolio/services.py
+
+from decimal import Decimal
+from django.utils import timezone
+from django.db import transaction
+
+from portfolio.models import Holding, Stock
+
+
 def persist_holdings(broker_account, holdings_data):
     """
-    Actual DB update logic for holdings.
-    Called by broker worker OR management command OR API.
+    Persist holdings snapshot for a broker_account.
 
-    Accepts either:
-      - a plain list of holding dicts, OR
-      - a dict with a 'data' key containing that list
-        (for backward compatibility with older trigger outputs).
+    - Upserts Stock rows (symbol/isin/asset_type + latest price data)
+    - Upserts Holding rows (per broker_account + stock)
+
+    Input can be:
+      - dict with 'data' key (trigger output), or
+      - plain list of holding dicts.
     """
-    # Normalize input to a list of dicts
+    # Normalize input
     if isinstance(holdings_data, dict):
         holdings_list = holdings_data.get("data", [])
     else:
         holdings_list = holdings_data or []
 
     saved = 0
+    now = timezone.now()
+
     with transaction.atomic():
         for item in holdings_list:
-            # Safety: skip anything that isn't a dict
             if not isinstance(item, dict):
                 continue
 
-            obj, created = Holding.objects.update_or_create(
-                broker_account=broker_account,
-                symbol=item["symbol"],
-                as_of=item.get("as_of", timezone.now()),
+            symbol = item.get("symbol")
+            if not symbol:
+                # If there's no symbol, we can't do much
+                continue
+
+            isin = item.get("isin")
+            asset_type = item.get("asset_type") or "equity"
+
+            # --- 1) Upsert Stock -----------------------------------------
+            stock_as_of = item.get("price_as_of") or item.get("as_of") or now
+
+            last_price_raw = item.get("last_price")
+            close_price_raw = item.get("close_price")
+
+            # Safely convert to Decimal or None
+            last_price = (
+                Decimal(str(last_price_raw))
+                if last_price_raw is not None
+                else Decimal("0")
+            )
+            close_price = (
+                Decimal(str(close_price_raw))
+                if close_price_raw is not None
+                else None
+            )
+
+            stock, _ = Stock.objects.update_or_create(
+                symbol=symbol,
+                isin=isin,
+                asset_type=asset_type,
                 defaults={
-                    "asset_type": item.get("asset_type", "stock"),
-                    "isin": item.get("isin"),
-                    "quantity": item.get("quantity", 0),
-                    "avg_price": item.get("avg_price", 0),
-                    "currency": item.get("currency", "INR"),
-                    "cost_value": item.get("cost_value"),
-                    "market_value": item.get("market_value"),
-                    "meta": item.get("meta"),
+                    "as_of": stock_as_of,
+                    "last_price": last_price,
+                    "close_price": close_price,
+                    "received_at": now,
                 },
             )
+
+            # --- 2) Upsert Holding ---------------------------------------
+            holding_as_of = item.get("as_of") or now
+
+            quantity_raw = item.get("quantity", 0)
+            avg_price_raw = item.get("avg_price", 0)
+
+            quantity = Decimal(str(quantity_raw or 0))
+            avg_price = Decimal(str(avg_price_raw or 0))
+
+            holding_defaults = {
+                "quantity": quantity,
+                "avg_price": avg_price,
+                "currency": item.get("currency", "INR"),
+                "as_of": holding_as_of,
+                "source_snapshot_id": item.get("source_snapshot_id"),
+                "meta": item.get("meta"),
+            }
+
+            # One holding row per (broker_account, stock)
+            Holding.objects.update_or_create(
+                broker_account=broker_account,
+                stock=stock,
+                defaults=holding_defaults,
+            )
+
             saved += 1
+
     return saved
+

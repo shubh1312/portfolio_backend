@@ -1,6 +1,3 @@
-# Database Schema ER Diagram
-
-```mermaid
 erDiagram
     USERS ||--o{ PORTFOLIOS : owns
     PORTFOLIOS ||--o{ BROKER_ACCOUNTS : owns
@@ -8,12 +5,15 @@ erDiagram
     BROKER_ACCOUNTS ||--|| BROKER_ACCOUNT_CREDENTIALS : has
     BROKER_ACCOUNTS ||--o{ HOLDINGS : contains
     BROKER_ACCOUNTS ||--o{ TRANSACTIONS : records
+    STOCK_PRICES ||--o{ HOLDINGS : held_as
+    STOCK_PRICES ||--o{ TRANSACTIONS : traded_as
 
     %% Table: users
     USERS {
         bigserial id PK
         text email
         text name
+        bool active
         timestamptz created_at
     }
 
@@ -56,30 +56,37 @@ erDiagram
         timestamptz updated_at
     }
 
-    %% Table: holdings
+    %% New Table: stock_prices (Stock model)
+    STOCK_PRICES {
+        bigserial id PK
+        text symbol
+        text isin
+        text asset_type        %% equity, etf, etc.
+        timestamptz as_of      %% price as-of timestamp
+        numeric last_price
+        numeric close_price
+        timestamptz received_at
+    }
+
+    %% Table: holdings (now references stock)
     HOLDINGS {
         bigserial id PK
         bigint broker_account_id FK
-        text asset_type
-        text symbol
-        text isin
+        bigint stock_id FK
         numeric quantity
         numeric avg_price
         text currency
-        numeric cost_value
-        numeric market_value
         timestamptz as_of
         text source_snapshot_id
         jsonb meta
         timestamptz created_at
     }
 
-    %% Table: transactions
+    %% Table: transactions (now references stock)
     TRANSACTIONS {
         bigserial id PK
         bigint broker_account_id FK
-        text asset_type
-        text symbol
+        bigint stock_id FK
         numeric quantity
         numeric price
         text currency
