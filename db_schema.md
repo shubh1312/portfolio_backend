@@ -1,6 +1,5 @@
 # Database Schema ER Diagram
 ```mermaid
-
 erDiagram
     USERS ||--o{ PORTFOLIOS : owns
     PORTFOLIOS ||--o{ BROKER_ACCOUNTS : owns
@@ -64,8 +63,10 @@ erDiagram
         bigserial id PK
         text symbol
         text isin
-        text asset_type        %% equity, etf, etc.
-        timestamptz as_of      %% price as-of timestamp
+        %% equity, etf, etc.
+        text asset_type
+        %% price as-of timestamp
+        timestamptz as_of
         numeric last_price
         numeric close_price
         timestamptz received_at
