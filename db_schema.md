@@ -1,5 +1,5 @@
 # Database Schema ER Diagram
-mermaid
+```mermaid
 
 erDiagram
     USERS ||--o{ PORTFOLIOS : owns
