@@ -6,5 +6,4 @@ class BaseTrigger(ABC):
 
     @abstractmethod
     def fetch_holdings(self):
-        """Return a list of holding dicts. Each dict must have at minimum: symbol, quantity, avg_price."""
         raise NotImplementedError

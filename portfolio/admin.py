@@ -36,7 +36,7 @@ class BrokerAccountCredentialAdmin(admin.ModelAdmin):
 
 @admin.register(models.Stock)
 class StockAdmin(admin.ModelAdmin):
-    list_display = ('symbol', 'isin', 'asset_type', 'last_price', 'as_of', 'received_at')
+    list_display = ('symbol', 'isin', 'asset_type', 'close_price', 'last_price', 'as_of', 'received_at')
     list_filter = ('asset_type',)
     search_fields = ('symbol', 'isin')
 
